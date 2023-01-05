@@ -1,0 +1,98 @@
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from webdriver_manager.chrome import ChromeDriverManager
+import time
+from selenium.webdriver.support.wait import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+
+import pytest
+
+# Flow of Unit Test
+
+# Setup
+def setup_function():
+    global driver
+    driver = webdriver.Chrome(executable_path=ChromeDriverManager().install())
+    driver.get("https://coinmarketcap.com")
+    driver.maximize_window()
+
+def teardown_functin():
+    driver.quit()
+
+
+# Test Case
+# Tear Down
+
+
+# Test Case 1 - do login
+def test_table():
+    print("Executing Login Test")
+
+    tbody_tr = driver.find_elements(By.XPATH,
+                         '//*[@id="__next"]/div/div[1]/div[2]/div/div[1]/div[4]/table/tbody/tr')
+    print("length = ", len(tbody_tr))
+
+    for i in tbody_tr[:2]:
+        anchor_ele = i.find_element(By.TAG_NAME, 'a')
+        print("anchor=", anchor_ele)
+        anchor_ele.click()
+        time.sleep(5)
+
+        # https://www.softwaretestinghelp.com/selenium-find-element-by-text/
+        source_code_ele = driver.find_element(By.XPATH, "//*[text()='Source code']");
+
+        if (source_code_ele.text == 'Source code'):
+            print("Element found using text")
+            print(source_code_ele.text)
+            # contains all list of element of explorers, communinty, source code etc
+            list_elements = driver.find_elements(By.XPATH, '//*[@id="__next"]/div/div[1]/div[2]/div/div[1]/div[2]/div/div[1]/div[3]/div/div[1]/ul/li')
+            print(list_elements)
+            for l in list_elements:
+                anchor_ele_s = l.find_elements(By.TAG_NAME, 'a')
+                print("anchor tag inside page= ", anchor_ele_s)
+
+                if (len(anchor_ele_s) != 0):
+                    for anchor_ele in anchor_ele_s:
+                        print(anchor_ele.get_attribute('href'))
+                        # https://stackoverflow.com/questions/28431765/open-web-in-new-tab-selenium-python
+                        if ('https://github.com' in anchor_ele.get_attribute('href')):
+                            print("true of github")
+                            href_github_link = anchor_ele.get_attribute('href')
+                            # Open a new window
+                            driver.execute_script("window.open('');")
+                            # Switch to the new window
+                            driver.switch_to.window(driver.window_handles[1])
+                            driver.get(href_github_link)
+                            time.sleep(3)
+                            star_btn = driver.find_element(By.XPATH, '//*[@id="repo-stars-counter-star"]')
+                            stars = star_btn.text
+                            print("Stars: ", stars)
+                            contributers_ele = driver.find_element(By.XPATH, '//*[@id="repo-content-pjax-container"]/div/div/div[3]/div[2]/div/div[5]/div/h2/a/span')
+                            total_contributers = contributers_ele.text
+                            print("Contributers: ", total_contributers)
+
+
+                            # close the active tab
+                            driver.close()
+                            time.sleep(3)
+                            # Switch back to the first tab
+                            driver.switch_to.window(driver.window_handles[0])
+
+
+
+
+
+        else:
+            print("Element not found");
+            driver.quit()
+
+    # //*[@id="__next"]/div/div[1]/div[2]/div/div[1]/div[2]/div/div[1]/div[3]/div/div[1]/ul/li[5]/a
+
+# Test Case 2 - do login
+def test_register():
+    print("Executing Register")
+
+
+# Test Case 3 - do login
+def test_myfunction():
+    print("my function")
