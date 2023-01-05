@@ -1,98 +1,106 @@
 from selenium import webdriver
+from selenium.common import NoSuchElementException
 from selenium.webdriver.common.by import By
 from webdriver_manager.chrome import ChromeDriverManager
+from selenium.webdriver.common.keys import Keys
 import time
-from selenium.webdriver.support.wait import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
 
-import pytest
 
-# Flow of Unit Test
-
-# Setup
 def setup_function():
     global driver
     driver = webdriver.Chrome(executable_path=ChromeDriverManager().install())
-    driver.get("https://coinmarketcap.com")
+    driver.get("https://coinmarketcap.com/")
     driver.maximize_window()
+    time.sleep(1)
 
-def teardown_functin():
+
+def teardown_function():
     driver.quit()
 
 
-# Test Case
-# Tear Down
+def test_open_tab():
+    body = driver.find_element(By.XPATH, '/html/body/div[1]/div/div[1]/div[2]/div/div[1]/div[4]/table/tbody')
+    rows = body.find_elements(By.TAG_NAME, 'tr')
+    cols = rows[0].find_elements(By.TAG_NAME, 'td')
+    i = 1
+    for row in rows:
+        col_data = row.find_element(By.TAG_NAME, 'a')
+        print("\nCoin Name: " + col_data.text)
+        # col_data.click()
+        href = col_data.get_attribute('href')
+        click_item(href)
+
+        i = i + 1
+        if i == 20:
+            break
+        # click_item()
+
+    new_url = "http://stackoverflow.com/"
+    # body = driver.find_element(By.TAG_NAME,'body')
+    # body.send_keys(Keys.CONTROL + 't')
+    # driver.find_element(By.TAG_NAME,'body').send_keys(Keys.CONTROL + 'w')
 
 
-# Test Case 1 - do login
-def test_table():
-    print("Executing Login Test")
+def click_item(new_url):
+    driver.execute_script("window.open('');")
+    time.sleep(0.5)
 
-    tbody_tr = driver.find_elements(By.XPATH,
-                         '//*[@id="__next"]/div/div[1]/div[2]/div/div[1]/div[4]/table/tbody/tr')
-    print("length = ", len(tbody_tr))
+    driver.switch_to.window(driver.window_handles[1])
+    driver.get(new_url)
 
-    for i in tbody_tr[:2]:
-        anchor_ele = i.find_element(By.TAG_NAME, 'a')
-        print("anchor=", anchor_ele)
-        anchor_ele.click()
-        time.sleep(5)
+    click_source_code()
 
-        # https://www.softwaretestinghelp.com/selenium-find-element-by-text/
-        source_code_ele = driver.find_element(By.XPATH, "//*[text()='Source code']");
+    if len(driver.window_handles) > 1:
+        driver.switch_to.window(driver.window_handles[1])
+        driver.close()
 
-        if (source_code_ele.text == 'Source code'):
-            print("Element found using text")
-            print(source_code_ele.text)
-            # contains all list of element of explorers, communinty, source code etc
-            list_elements = driver.find_elements(By.XPATH, '//*[@id="__next"]/div/div[1]/div[2]/div/div[1]/div[2]/div/div[1]/div[3]/div/div[1]/ul/li')
-            print(list_elements)
-            for l in list_elements:
-                anchor_ele_s = l.find_elements(By.TAG_NAME, 'a')
-                print("anchor tag inside page= ", anchor_ele_s)
-
-                if (len(anchor_ele_s) != 0):
-                    for anchor_ele in anchor_ele_s:
-                        print(anchor_ele.get_attribute('href'))
-                        # https://stackoverflow.com/questions/28431765/open-web-in-new-tab-selenium-python
-                        if ('https://github.com' in anchor_ele.get_attribute('href')):
-                            print("true of github")
-                            href_github_link = anchor_ele.get_attribute('href')
-                            # Open a new window
-                            driver.execute_script("window.open('');")
-                            # Switch to the new window
-                            driver.switch_to.window(driver.window_handles[1])
-                            driver.get(href_github_link)
-                            time.sleep(3)
-                            star_btn = driver.find_element(By.XPATH, '//*[@id="repo-stars-counter-star"]')
-                            stars = star_btn.text
-                            print("Stars: ", stars)
-                            contributers_ele = driver.find_element(By.XPATH, '//*[@id="repo-content-pjax-container"]/div/div/div[3]/div[2]/div/div[5]/div/h2/a/span')
-                            total_contributers = contributers_ele.text
-                            print("Contributers: ", total_contributers)
+    driver.switch_to.window(driver.window_handles[0])
 
 
-                            # close the active tab
-                            driver.close()
-                            time.sleep(3)
-                            # Switch back to the first tab
-                            driver.switch_to.window(driver.window_handles[0])
+# def check_source_code():
 
 
+def click_source_code():
+    xpath = "//*[@id=\"__next\"]/div/div[1]/div[2]/div/div[1]/div[2]/div/div[1]/div[3]/div/div[1]/ul/li[5]/a"
+    sc_elements = driver.find_elements(By.XPATH, xpath)
+    # print(len(sc_elements))
+    if len(sc_elements) > 0:
+        sc_elem = sc_elements[0]
+        href = sc_elem.get_attribute('href')
+
+        driver.execute_script("window.open('');")
+        time.sleep(0.5)
+
+        driver.switch_to.window(driver.window_handles[2])
+
+        driver.get(href)
+        log_start_and_contributors()
+
+    driver.close()
+
+    if (len(sc_elements)) > 0:
+        driver.switch_to.window(driver.window_handles[1])
 
 
+def log_start_and_contributors():
+    xpath = "//*[@id=\"repo-stars-counter-star\"]"
+    elements = driver.find_elements(By.XPATH, xpath)
+    if len(elements) > 0:
+        stars = elements[0].text
+        print("     Stars: " + stars)
 
-        else:
-            print("Element not found");
-            driver.quit()
-
-    # //*[@id="__next"]/div/div[1]/div[2]/div/div[1]/div[2]/div/div[1]/div[3]/div/div[1]/ul/li[5]/a
-
-# Test Case 2 - do login
-def test_register():
-    print("Executing Register")
+    xpath = "//*[@id=\"repo-content-pjax-container\"]/div/div/div[3]/div[2]/div/div[4]/div/h2/a/span"
+    elements = driver.find_elements(By.XPATH, xpath)
+    if len(elements) > 0:
+        contributors = elements[0]
+        print("     Contributors: " + contributors.text)
 
 
-# Test Case 3 - do login
-def test_myfunction():
-    print("my function")
+# driver = webdriver.Chrome()
+# driver.get("http://www.google.com/")
+#
+# driver.find_element_by_tag_name('body').send_keys(Keys.COMMAND + 't')
+#
+# driver.get('http://stackoverflow.com/')
+#
+# driver.find_element_by_tag_name('body').send_keys(Keys.COMMAND + 'w')
